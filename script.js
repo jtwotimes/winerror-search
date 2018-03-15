@@ -3,8 +3,13 @@ function execute() {
     const sanitizedTerms = [];
 
     terms.forEach(term => {
-        if (/^[a-zA-Z0-9]+$/.test(term))
+        if (/^[a-zA-Z0-9]+$/.test(term)) {
+            if (term.startsWith("0X")) {
+                term = term.replace("0X", "0x");
+            }
+        
             sanitizedTerms.push(term);
+        }
     });
 
     if (sanitizedTerms.length === 0)
@@ -12,28 +17,27 @@ function execute() {
 
     const db = firebase.firestore();
     let colRef = db.collection('errors');
-    let query;
-    sanitizedTerms.forEach(term => query = colRef.where(`SearchTerms.${term}`, '==', true));
+
+    const queries = [];
+    queries.push(...sanitizedTerms.map(term => colRef.where(`SearchTerms.${term}`, '==', true).get()));
 
     destroyExistingTable();
 
-    query.get().then(function(querySnapshot) {
+    Promise.all(queries).then((querySnapshot) => {
         let results = [];
-        querySnapshot.forEach(function(doc) {
-            results.push({
-                code: doc.data().Code,
-                description: doc.data().Description,
-                name: doc.data().Name
-            });
+        querySnapshot.forEach((queryResult) => {
+            queryResult.forEach((doc) => {
+                results.push({
+                    code: doc.data().Code,
+                    description: doc.data().Description,
+                    name: doc.data().Name
+                });
+            })
         });
 
         createAndPopulateTable(results);
-    }, (reason) => {
-        console.log(reason);
-    })
-    .catch(function(error) {
-        console.log("Error getting documents: ", error);
-    });
+    }, (reason) => console.log(reason))
+    .catch((error) => console.log("Error getting documents: ", error));
 }
 
 function createAndPopulateTable(data) {

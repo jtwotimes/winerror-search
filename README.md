@@ -1,4 +1,6 @@
 # winerror-search
+[Site](https://mtrdp642.github.io/winerror-search/index.html)
+
 If you've ever wanted to search through Window's error codes (defined in winerror.h), you're left to manually scroll through the huge list and find the code that applies for your use case. This app searches for you, using your input as a query to the error code description text, and outputs the error code and description.
 
 # How to use
